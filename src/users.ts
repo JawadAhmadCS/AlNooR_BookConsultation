@@ -52,31 +52,56 @@ async function ensureUsersTable(sql: ReturnType<typeof postgres>) {
 
 const DEFAULT_SUPER = { username: "superadmin", password: "1234" } as const;
 
-async function seedSuperAdminIfEmpty(
+/**
+ * Ensures the default super admin exists (recovery if DB had users but no superadmin).
+ * Safe to call on every auth path (idempotent when a superadmin already exists).
+ */
+async function ensureDefaultSuperAdmin(
   sql: ReturnType<typeof postgres> | null
 ) {
+  const hash = bcrypt.hashSync(DEFAULT_SUPER.password, 10);
   if (!sql) {
     const mem = memoryUsers();
-    if (mem.length > 0) return;
-    const hash = bcrypt.hashSync(DEFAULT_SUPER.password, 10);
-    mem.push({
-      id: crypto.randomUUID(),
-      username: DEFAULT_SUPER.username,
-      password_hash: hash,
-      role: "superadmin",
-      created_at: new Date().toISOString(),
-    });
+    const hasSuper = mem.some((x) => x.role === "superadmin");
+    if (hasSuper) return;
+    const existing = mem.find(
+      (x) => x.username.toLowerCase() === DEFAULT_SUPER.username.toLowerCase()
+    );
+    if (existing) {
+      existing.password_hash = hash;
+      existing.role = "superadmin";
+    } else {
+      mem.push({
+        id: crypto.randomUUID(),
+        username: DEFAULT_SUPER.username,
+        password_hash: hash,
+        role: "superadmin",
+        created_at: new Date().toISOString(),
+      });
+    }
     return;
   }
   await ensureUsersTable(sql);
-  const c = await sql`select count(*)::int as n from dashboard_users`;
-  const n = (c[0] as { n: number }).n;
-  if (n > 0) return;
-  const hash = bcrypt.hashSync(DEFAULT_SUPER.password, 10);
-  await sql`
-    insert into dashboard_users (username, password_hash, role)
-    values (${DEFAULT_SUPER.username}, ${hash}, 'superadmin')
-  `;
+  const supCount = (await sql`
+    select count(*)::int as n from dashboard_users where role = 'superadmin'
+  `) as { n: number }[];
+  if ((supCount[0]?.n ?? 0) > 0) return;
+  const uname = DEFAULT_SUPER.username.toLowerCase();
+  const existingRows = (await sql`
+    select id from dashboard_users where lower(username) = ${uname}
+  `) as { id: string }[];
+  if (existingRows.length > 0) {
+    await sql`
+      update dashboard_users
+      set password_hash = ${hash}, role = 'superadmin'
+      where lower(username) = ${uname}
+    `;
+  } else {
+    await sql`
+      insert into dashboard_users (username, password_hash, role)
+      values (${DEFAULT_SUPER.username}, ${hash}, 'superadmin')
+    `;
+  }
 }
 
 function rowPublic(r: {
@@ -107,7 +132,7 @@ export async function verifyUserPassword(
   password: string
 ): Promise<DashboardUser | null> {
   const sql = getSql();
-  await seedSuperAdminIfEmpty(sql);
+  await ensureDefaultSuperAdmin(sql);
   const u = username.trim().toLowerCase();
   if (!sql) {
     const row = memoryUsers().find(
@@ -143,7 +168,7 @@ export async function verifyUserPassword(
 
 export async function listDashboardUsers(): Promise<DashboardUser[]> {
   const sql = getSql();
-  await seedSuperAdminIfEmpty(sql);
+  await ensureDefaultSuperAdmin(sql);
   if (!sql) {
     return memoryUsers().map((r) => ({
       id: r.id,
@@ -172,7 +197,7 @@ export async function createDashboardUser(input: {
   role: Role;
 }): Promise<DashboardUser | "duplicate" | "bad_role"> {
   const sql = getSql();
-  await seedSuperAdminIfEmpty(sql);
+  await ensureDefaultSuperAdmin(sql);
   const role = normalizeRole(input.role);
   if (!role) return "bad_role";
   const uname = input.username.trim();
@@ -220,7 +245,7 @@ export async function deleteDashboardUser(
   actorUserId: string
 ): Promise<"ok" | "not_found" | "forbidden" | "last_superadmin"> {
   const sql = getSql();
-  await seedSuperAdminIfEmpty(sql);
+  await ensureDefaultSuperAdmin(sql);
   if (id === actorUserId) return "forbidden";
   if (!sql) {
     const mem = memoryUsers();
@@ -256,7 +281,7 @@ export async function updateDashboardUser(
   updates: { password?: string; role?: Role }
 ): Promise<DashboardUser | "not_found" | "last_superadmin"> {
   const sql = getSql();
-  await seedSuperAdminIfEmpty(sql);
+  await ensureDefaultSuperAdmin(sql);
   const roleIn = updates.role;
   if (!sql) {
     const mem = memoryUsers();

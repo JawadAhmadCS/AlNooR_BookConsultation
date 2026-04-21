@@ -35,9 +35,16 @@ export default function LoginPage() {
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
+      const raw = await res.text();
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error || "Login failed");
+        let message = "Login failed";
+        try {
+          const j = JSON.parse(raw) as { error?: string };
+          if (j.error) message = j.error;
+        } catch {
+          if (raw.trim()) message = raw.trim().slice(0, 280);
+        }
+        throw new Error(message);
       }
       router.replace("/dashboard");
       router.refresh();
