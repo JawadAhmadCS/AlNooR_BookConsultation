@@ -10,19 +10,33 @@ import {
   withCors,
 } from "@/bookings";
 import { BOOKING_FIELDS } from "@/config";
+import { getSessionFromRequest } from "@/auth-session";
+import { canEditAppointments } from "@/roles";
 
 export const runtime = "nodejs";
+
+function jsonUnauthorized() {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+function jsonForbidden() {
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+}
 
 export async function OPTIONS() {
   return corsOptions();
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ slug?: string[] }> }
 ) {
   const slug = (await ctx.params).slug ?? [];
   if (slug.length === 1 && slug[0] === "appointments") {
+    const session = await getSessionFromRequest(req);
+    if (!session) {
+      return jsonUnauthorized();
+    }
     const appointments = await listAppointments();
     return withCors(NextResponse.json(appointments));
   }
@@ -86,6 +100,13 @@ export async function PATCH(
   const slug = (await ctx.params).slug ?? [];
   if (slug.length !== 2 || slug[0] !== "appointments") {
     return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }));
+  }
+  const session = await getSessionFromRequest(req);
+  if (!session) {
+    return withCors(jsonUnauthorized());
+  }
+  if (!canEditAppointments(session.role)) {
+    return withCors(jsonForbidden());
   }
   const id = slug[1];
 
@@ -155,12 +176,19 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ slug?: string[] }> }
 ) {
   const slug = (await ctx.params).slug ?? [];
   if (slug.length !== 2 || slug[0] !== "appointments") {
     return withCors(NextResponse.json({ error: "Not found" }, { status: 404 }));
+  }
+  const session = await getSessionFromRequest(req);
+  if (!session) {
+    return withCors(jsonUnauthorized());
+  }
+  if (!canEditAppointments(session.role)) {
+    return withCors(jsonForbidden());
   }
   const id = slug[1];
 
