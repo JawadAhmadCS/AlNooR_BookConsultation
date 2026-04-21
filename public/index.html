@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Al Noor Care Hospital — multi-specialty private hospital since 2018. Book outpatient consultations, emergency care, diagnostics, and pharmacy support across Islamabad, Lahore, and Rawalpindi." />
+  <title>Al Noor Care Hospital — Book a consultation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f7f9;
+      --surface: #ffffff;
+      --text: #1a2d3d;
+      --muted: #4a5f6f;
+      --border: #d8e2ea;
+      --accent: #0a6b72;
+      --accent-hover: #085a60;
+      --accent-soft: rgba(10, 107, 114, 0.08);
+      --emergency: #b42318;
+      --emergency-bg: #fef3f2;
+      --radius: 12px;
+      --radius-lg: 18px;
+      --shadow: 0 4px 24px rgba(15, 40, 55, 0.08);
+      --font-sans: "Source Sans 3", system-ui, sans-serif;
+      --font-serif: "Source Serif 4", Georgia, serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .skip {
+      position: absolute;
+      left: -9999px;
+      z-index: 100;
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+    }
+    .skip:focus { left: 1rem; top: 1rem; }
+    .emergency-bar {
+      background: var(--emergency-bg);
+      color: var(--emergency);
+      text-align: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-bottom: 1px solid #fecdca;
+    }
+    .emergency-bar a { color: inherit; font-weight: 700; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, var(--accent), #0d8a94);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .brand-text { line-height: 1.2; }
+    .brand-text strong { display: block; font-family: var(--font-serif); font-size: 1.15rem; font-weight: 600; }
+    .brand-text span { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    nav a:hover { color: var(--accent); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.2rem;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+    .btn-outline:hover { background: var(--accent-soft); }
+    .menu-toggle {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero {
+      padding: 2.75rem 0 3rem;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+    .tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.85rem, 4vw, 2.45rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0 0 1rem;
+      letter-spacing: -0.02em;
+    }
+    .lead { color: var(--muted); font-size: 1.05rem; margin: 0 0 1.5rem; max-width: 36rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.75rem; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 520px) { .stats { grid-template-columns: 1fr; } }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat-num { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.25rem; }
+    .preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .preview-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      background: #eef3f6;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .preview-body { padding: 1.25rem; }
+    .preview-body h3 { margin: 0 0 0.75rem; font-size: 1rem; font-weight: 600; }
+    .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.45rem; }
+    @media (max-width: 520px) { .slot-grid { grid-template-columns: repeat(3, 1fr); } }
+    .slot {
+      padding: 0.45rem;
+      text-align: center;
+      font-size: 0.78rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .slot.pick { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+    section { padding: 2.75rem 0; }
+    .section-head { max-width: 640px; margin-bottom: 1.75rem; }
+    .section-head h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.45rem, 2.5vw, 1.85rem);
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+    .section-head p { margin: 0; color: var(--muted); }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) { .card-grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 0.5rem; font-size: 1.02rem; font-weight: 600; }
+    .card p { margin: 0; font-size: 0.92rem; color: var(--muted); }
+    .icon { font-size: 1.35rem; margin-bottom: 0.5rem; }
+    .list-columns {
+      columns: 2;
+      column-gap: 2rem;
+      margin: 0;
+      padding-left: 1.2rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    @media (max-width: 700px) { .list-columns { columns: 1; } }
+    .list-columns li { margin-bottom: 0.4rem; break-inside: avoid; }
+    .pill-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .pill {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .branch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 900px) { .branch-grid { grid-template-columns: 1fr; } }
+    .branch {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.35rem;
+      box-shadow: var(--shadow);
+    }
+    .branch h3 {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+    }
+    .branch address { font-style: normal; color: var(--muted); font-size: 0.92rem; margin-bottom: 0.75rem; line-height: 1.55; }
+    .branch a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .branch a:hover { text-decoration: underline; }
+    .hours-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 0.75rem; }
+    .hours-table th, .hours-table td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+    }
+    .hours-table th { background: #eef3f6; font-weight: 600; color: var(--text); }
+    .hours-table td { background: var(--surface); color: var(--muted); }
+    .prose { color: var(--muted); font-size: 0.95rem; max-width: 720px; }
+    .prose p { margin: 0 0 1rem; }
+    .fee-table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    .fee-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 420px; }
+    .fee-table th, .fee-table td { padding: 0.65rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .fee-table th { background: #eef3f6; font-weight: 600; }
+    .fee-table tr:last-child td { border-bottom: none; }
+    .cta-band {
+      background: linear-gradient(135deg, var(--accent-soft), rgba(10, 107, 114, 0.04));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .cta-band h2 { font-family: var(--font-serif); margin: 0 0 0.5rem; font-size: 1.45rem; }
+    .cta-band p { margin: 0 auto 1.25rem; color: var(--muted); max-width: 520px; }
+    footer {
+      background: #0f2a32;
+      color: #c5d4dc;
+      padding: 2.5rem 0 2rem;
+      margin-top: 1rem;
+    }
+    footer a { color: #9fd4d9; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
+    footer h3 { color: #fff; font-size: 0.95rem; margin: 0 0 0.75rem; font-weight: 600; }
+    footer p, footer li { font-size: 0.88rem; line-height: 1.55; margin: 0; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 1.25rem; text-align: center; font-size: 0.82rem; color: #8fa8b3; }
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    @media (max-width: 768px) {
+      nav#mainNav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 72px;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        transform: translateY(-120%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        z-index: 40;
+      }
+      nav#mainNav.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+      nav#mainNav a, nav#mainNav .btn { width: 100%; text-align: center; justify-content: center; }
+      .menu-toggle { display: flex; }
+    }
+    @media (min-width: 769px) {
+      .menu-toggle { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="emergency-bar" role="region" aria-label="Emergency contact">
+    <span class="wrap" style="display:block;">
+      Islamabad emergency line (24/7): <a href="tel:+92518432199">+92 51 8432199</a>
+      — For life-threatening emergencies, call immediately or visit our emergency unit.
+    </span>
+  </div>
+
+  <header class="wrap">
+    <a href="#" class="brand">
+      <span class="brand-mark" aria-hidden="true">+</span>
+      <span class="brand-text">
+        <strong>Al Noor Care Hospital</strong>
+        <span>Multi-specialty care since 2018</span>
+      </span>
+    </a>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav id="mainNav" class="nav-desktop" aria-label="Primary">
+      <a href="#services">Services</a>
+      <a href="#branches">Branches</a>
+      <a href="#hours">Hours</a>
+      <a href="#policies">Patient info</a>
+      <a href="#fees">Consultation fees</a>
+      <a href="/dashboard" class="btn btn-outline">Staff dashboard</a>
+      <a href="#book" class="btn btn-primary">Book consultation</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <div class="wrap hero">
+      <div class="hero-grid">
+        <div>
+          <span class="tag reveal">Outpatient · Emergency · Diagnostics · Pharmacy</span>
+          <h1 class="reveal">Care you can trust — for your family, across three cities</h1>
+          <p class="lead reveal">
+            Al Noor Care Hospital is a multi-specialty private hospital established in <strong>2018</strong>.
+            We provide outpatient consultations, emergency care, diagnostic services, maternity-related care,
+            minor procedures, pharmacy support, and limited inpatient treatment — managed with modern systems
+            and a patient-first approach.
+          </p>
+          <div class="hero-actions reveal">
+            <a class="btn btn-primary" href="#book">Book a consultation online</a>
+            <a class="btn btn-outline" href="#branches">Find a branch</a>
+          </div>
+          <div class="stats reveal">
+            <div class="stat">
+              <div class="stat-num">2018</div>
+              <div class="stat-label">Year founded</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">3</div>
+              <div class="stat-label">Locations</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">24/7</div>
+              <div class="stat-label">Emergency &amp; pharmacy (Islamabad)</div>
+            </div>
+          </div>
+        </div>
+        <div class="preview reveal" aria-label="Example OPD booking">
+          <div class="preview-top">
+            <span class="dot" style="background:#e8a09a"></span>
+            <span class="dot" style="background:#e8c96a"></span>
+            <span class="dot" style="background:#7bc96f"></span>
+            <span style="margin-left:auto">OPD — consultation booking</span>
+          </div>
+          <div class="preview-body">
+            <h3>Select a time with your consultant</h3>
+            <div class="slot-grid" id="slotGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="book" class="wrap" style="padding-top:0">
+      <div class="cta-band reveal">
+        <h2>Book your consultation</h2>
+        <p>
+          Our primary goal is to help you schedule a visit quickly and clearly. Use the <strong>chat assistant</strong> on this page (icon at the bottom-right) to book a consultation in a hospital-appropriate flow.
+          You can also reach our main reception on <a href="tel:+92518432100">+92 51 8432100</a> or WhatsApp
+          <a href="https://wa.me/923001112233" target="_blank" rel="noopener noreferrer">+92 300 1112233</a>.
+          Staff may view incoming online requests on the <a href="/dashboard">appointments dashboard</a>.
+        </p>
+        <a class="btn btn-primary" href="#hours">View branch hours before you book</a>
+      </div>
+    </section>
+
+    <section id="services" class="wrap">
+      <div class="section-head reveal">
+        <h2>Clinical departments &amp; specialties</h2>
+        <p>Consultant-led services across major medical disciplines — coordinated with our diagnostics and pharmacy teams.</p>
+      </div>
+      <div class="card-grid">
+        <article class="card reveal"><div class="icon" aria-hidden="true">🩺</div><h3>General Medicine</h3><p>Comprehensive assessment, chronic disease follow-up, and referrals when specialist input is needed.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">❤️</div><h3>Cardiology</h3><p>Heart health evaluation, ECG coordination, and management planning with our cardiology team.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">✨</div><h3>Dermatology</h3><p>Skin, hair, and allergy-related consultations and treatment planning.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🤱</div><h3>Gynecology &amp; Obstetrics</h3><p>Pregnancy consultations, women’s health, and maternity-related outpatient care.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🧒</div><h3>Pediatrics</h3><p>Child health, growth, immunization support, and pediatric follow-ups.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🦴</div><h3>Orthopedics</h3><p>Bone and joint conditions, sports injuries, and musculoskeletal assessment.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">👂</div><h3>ENT</h3><p>Ear, nose, and throat conditions evaluated by specialist consultants.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🦷</div><h3>Dentistry</h3><p>Routine dental checkups and outpatient dental consultations.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🧠</div><h3>Neurology</h3><p>Neurological symptoms assessment and coordinated care pathways.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🏃</div><h3>Physiotherapy &amp; Rehabilitation</h3><p>Recovery-focused sessions with our physiotherapy team.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">💬</div><h3>Psychology &amp; Mental Health</h3><p>Confidential counseling and mental health support by appointment.</p></article>
+        <article class="card reveal"><div class="icon" aria-hidden="true">🥗</div><h3>Nutrition &amp; Dietetics</h3><p>Diet planning for medical conditions, pregnancy, and preventive health goals.</p></article>
+      </div>
+    </section>
+
+    <section id="diagnostics" style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Diagnostics &amp; support services</h2>
+          <p>Laboratory and point-of-care testing, imaging coordination, and on-site support services.</p>
+        </div>
+        <ul class="list-columns reveal">
+          <li>Laboratory testing and reporting</li>
+          <li>Blood tests</li>
+          <li>Urine tests</li>
+          <li>Blood sugar testing</li>
+          <li>Liver and kidney function tests</li>
+          <li>Lipid profile</li>
+          <li>Hormone testing</li>
+          <li>Pregnancy tests</li>
+          <li>Ultrasound coordination</li>
+          <li>X-ray</li>
+          <li>ECG</li>
+          <li>Blood pressure monitoring</li>
+          <li>Vaccination support</li>
+          <li>In-house pharmacy</li>
+          <li>Minor procedure room</li>
+          <li>Dressing and wound care</li>
+          <li>IV drip and injection support</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="care" class="wrap">
+      <div class="section-head reveal">
+        <h2>How we help patients every day</h2>
+        <p>Typical reasons people visit Al Noor Care — from first consultations to ongoing management.</p>
+      </div>
+      <div class="pill-grid reveal">
+        <span class="pill">Doctor consultations</span>
+        <span class="pill">Follow-up appointments</span>
+        <span class="pill">Medical checkups</span>
+        <span class="pill">Blood pressure &amp; diabetes monitoring</span>
+        <span class="pill">Pregnancy consultations</span>
+        <span class="pill">Child specialist visits</span>
+        <span class="pill">Skin treatment</span>
+        <span class="pill">Dental checkups</span>
+        <span class="pill">Physiotherapy sessions</span>
+        <span class="pill">Counseling</span>
+        <span class="pill">Laboratory tests</span>
+        <span class="pill">Emergency treatment</span>
+        <span class="pill">Pharmacy purchases</span>
+        <span class="pill">Medical certificates (after evaluation)</span>
+        <span class="pill">Preventive health screening</span>
+      </div>
+    </section>
+
+    <section id="facilities" style="background:var(--surface); border-top:1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Facilities, team &amp; standards</h2>
+          <p>A professionally managed environment focused on safety, dignity, and clear communication.</p>
+        </div>
+        <div class="prose reveal">
+          <p>
+            Our hospital brings together <strong>qualified doctors</strong>, <strong>consultant specialists</strong>, <strong>nurses</strong>,
+            <strong>lab technicians</strong>, <strong>pharmacists</strong>, <strong>physiotherapists</strong>, <strong>counselors</strong>,
+            <strong>emergency response staff</strong>, and <strong>reception and appointment coordinators</strong> to support every visit.
+          </p>
+          <p>
+            On-site facilities include a <strong>reception and waiting lounge</strong>, <strong>emergency unit</strong>,
+            <strong>consultation rooms</strong>, <strong>diagnostic laboratory</strong>, <strong>in-house pharmacy</strong>,
+            <strong>minor procedure room</strong>, <strong>wheelchair access</strong>, <strong>digital patient registration</strong>,
+            and rigorous <strong>hygiene and infection control</strong> practices.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="branches" class="wrap">
+      <div class="section-head reveal">
+        <h2>Our branches</h2>
+        <p>Main campus in Islamabad with additional outpatient access in Lahore and Rawalpindi. Phone numbers and addresses are listed below for appointments and directions.</p>
+      </div>
+      <div class="branch-grid">
+        <div class="branch reveal">
+          <h3>Islamabad (main)</h3>
+          <address>
+            Plot 18, Street 7, F-8 Markaz<br />
+            Islamabad, Pakistan
+          </address>
+          <p><a href="tel:+92518432100">+92 51 8432100</a> · Reception</p>
+          <p>WhatsApp: <a href="https://wa.me/923001112233" target="_blank" rel="noopener noreferrer">+92 300 1112233</a></p>
+          <p>Email: <a href="mailto:support@alnoorcarehospital.com">support@alnoorcarehospital.com</a></p>
+          <p>Emergency: <a href="tel:+92518432199">+92 51 8432199</a> (24/7)</p>
+        </div>
+        <div class="branch reveal">
+          <h3>Lahore</h3>
+          <address>
+            22-A, Block C, Johar Town<br />
+            Lahore, Pakistan
+          </address>
+          <p><a href="tel:+924235987710">+92 42 35987710</a></p>
+          <p>Limited 24/7 emergency unit — confirm availability when you call.</p>
+        </div>
+        <div class="branch reveal">
+          <h3>Rawalpindi</h3>
+          <address>
+            Plaza 9, Commercial Market, Satellite Town<br />
+            Rawalpindi, Pakistan
+          </address>
+          <p><a href="tel:+92514921188">+92 51 4921188</a></p>
+          <p>24/7 basic emergency support — details provided at reception.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="hours" style="background:var(--surface); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Hours &amp; operations</h2>
+          <p>Timings may vary on public holidays; emergency and pharmacy coverage is prioritized where noted below.</p>
+        </div>
+
+        <h3 class="reveal" style="font-family:var(--font-serif); font-size:1.15rem; margin:1.5rem 0 0.75rem;">Islamabad (main)</h3>
+        <div class="fee-table-wrap reveal" style="margin-bottom:1.5rem;">
+          <table class="fee-table hours-table">
+            <thead>
+              <tr><th>Service</th><th>Hours</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>OPD</td><td>Mon–Sat 9:00 AM – 9:00 PM · Sun 11:00 AM – 5:00 PM</td></tr>
+              <tr><td>Emergency</td><td>Open 24 hours, 7 days a week</td></tr>
+              <tr><td>Laboratory</td><td>Mon–Sat 8:00 AM – 10:00 PM · Sun 10:00 AM – 6:00 PM</td></tr>
+              <tr><td>Pharmacy</td><td>Open 24 hours, 7 days a week</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="reveal" style="font-family:var(--font-serif); font-size:1.15rem; margin:1.5rem 0 0.75rem;">Lahore</h3>
+        <div class="fee-table-wrap reveal" style="margin-bottom:1.5rem;">
+          <table class="fee-table hours-table">
+            <thead>
+              <tr><th>Service</th><th>Hours</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Branch operations</td><td>Monday–Saturday 10:00 AM – 8:00 PM</td></tr>
+              <tr><td>Emergency</td><td>Limited 24/7 emergency unit — contact branch for current capacity</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="reveal" style="font-family:var(--font-serif); font-size:1.15rem; margin:1.5rem 0 0.75rem;">Rawalpindi</h3>
+        <div class="fee-table-wrap reveal">
+          <table class="fee-table hours-table">
+            <thead>
+              <tr><th>Service</th><th>Hours</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Branch operations</td><td>Monday–Saturday 9:00 AM – 8:00 PM</td></tr>
+              <tr><td>Emergency</td><td>24/7 basic emergency support</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="policies" class="wrap">
+      <div class="section-head reveal">
+        <h2>Appointments, privacy &amp; visiting guidance</h2>
+        <p>Clear expectations help us serve you safely and on time.</p>
+      </div>
+      <div class="prose reveal">
+        <p>
+          <strong>Appointments are recommended</strong> before you visit so we can match you with the right consultant and reduce waiting.
+          <strong>Walk-ins</strong> are welcome when doctor availability allows.
+        </p>
+        <p>
+          Please <strong>arrive about 15 minutes early</strong> for registration. If you are <strong>more than 15 minutes late</strong>,
+          your appointment may be delayed or rescheduled to protect other patients’ schedules.
+        </p>
+        <p>
+          To <strong>cancel or reschedule</strong>, call or message us on <strong>phone or WhatsApp</strong>, ideally
+          <strong>at least 4 hours</strong> before your scheduled time.
+        </p>
+        <p>
+          Your <strong>personal details and medical records are treated as confidential</strong>.
+          <strong>One attendant</strong> is generally permitted when clinically or practically needed.
+        </p>
+        <p>
+          On <strong>public holidays</strong>, OPD and some specialist hours may be reduced; <strong>emergency</strong> and
+          <strong>pharmacy</strong> services typically remain operational as per branch arrangements — please call ahead if unsure.
+        </p>
+      </div>
+    </section>
+
+    <section id="fees" style="background:var(--surface); border-top:1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Sample consultation charges (PKR)</h2>
+          <p>Indicative fees for common visits — final charges depend on case complexity, investigations, and consultant discretion.</p>
+        </div>
+        <div class="fee-table-wrap reveal">
+          <table class="fee-table">
+            <thead>
+              <tr><th>Service</th><th>Sample fee</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>General Physician</td><td>PKR 2,000</td></tr>
+              <tr><td>Pediatrician</td><td>PKR 2,500</td></tr>
+              <tr><td>Dermatologist</td><td>PKR 3,000</td></tr>
+              <tr><td>Gynecologist</td><td>PKR 3,000</td></tr>
+              <tr><td>Cardiologist</td><td>PKR 4,000</td></tr>
+              <tr><td>Orthopedic Specialist</td><td>PKR 3,500</td></tr>
+              <tr><td>Dentist Consultation</td><td>PKR 2,000</td></tr>
+              <tr><td>Physiotherapy Session</td><td>PKR 2,500</td></tr>
+              <tr><td>Counseling Session</td><td>PKR 3,500</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="prose reveal" style="margin-top:1rem;">
+          <strong>Payment methods:</strong> cash, debit card, credit card, bank transfer for selected cases, and digital wallet support at selected branches.
+        </p>
+      </div>
+    </section>
+
+    <section class="wrap" style="padding-bottom:3rem;">
+      <div class="cta-band reveal">
+        <h2>Need a consultation?</h2>
+        <p>Use the booking assistant on this page, call our Islamabad reception, or message us on WhatsApp. We are here to help you choose the right service and time.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:center;">
+          <a class="btn btn-primary" href="#book">Book online</a>
+          <a class="btn btn-outline" href="tel:+92518432100">Call +92 51 8432100</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-grid">
+      <div>
+        <h3>Al Noor Care Hospital</h3>
+        <p>Multi-specialty private healthcare since 2018 — patient-focused, professionally managed, and committed to clear communication at every step.</p>
+      </div>
+      <div>
+        <h3>Main branch</h3>
+        <p>Plot 18, Street 7, F-8 Markaz, Islamabad, Pakistan</p>
+        <p>Tel <a href="tel:+92518432100">+92 51 8432100</a><br />
+        Emergency <a href="tel:+92518432199">+92 51 8432199</a><br />
+        <a href="mailto:support@alnoorcarehospital.com">support@alnoorcarehospital.com</a></p>
+      </div>
+      <div>
+        <h3>Quick links</h3>
+        <p>
+          <a href="#hours">Hours</a> ·
+          <a href="#branches">Branches</a> ·
+          <a href="#policies">Patient info</a> ·
+          <a href="/dashboard">Dashboard</a>
+        </p>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <p>© <span id="year"></span> Al Noor Care Hospital. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      var nav = document.getElementById("mainNav");
+      var toggle = document.getElementById("menuToggle");
+      if (toggle && nav) {
+        toggle.addEventListener("click", function () {
+          var open = nav.classList.toggle("open");
+          toggle.setAttribute("aria-expanded", open);
+          toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+        });
+        nav.querySelectorAll("a").forEach(function (a) {
+          a.addEventListener("click", function () {
+            nav.classList.remove("open");
+            toggle.setAttribute("aria-expanded", "false");
+            toggle.setAttribute("aria-label", "Open menu");
+          });
+        });
+      }
+
+      document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          var id = a.getAttribute("href");
+          if (id.length > 1) {
+            var el = document.querySelector(id);
+            if (el) {
+              e.preventDefault();
+              el.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+            }
+          }
+        });
+      });
+
+      var reveals = document.querySelectorAll(".reveal");
+      if (!reduced && "IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              io.unobserve(entry.target);
+            }
+          });
+        }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
+        reveals.forEach(function (el) { io.observe(el); });
+      } else {
+        reveals.forEach(function (el) { el.classList.add("visible"); });
+      }
+
+      var times = ["9:00", "9:30", "10:00", "10:30", "11:00", "11:30", "1:00", "1:30"];
+      var grid = document.getElementById("slotGrid");
+      if (grid) {
+        times.forEach(function (t, i) {
+          var div = document.createElement("div");
+          div.className = "slot" + (i === 3 ? " pick" : "");
+          div.textContent = t;
+          grid.appendChild(div);
+        });
+      }
+    })();
+  </script>
+  <script src="/alnoor-consultation-widget.js" defer></script>
+</body>
+</html>
