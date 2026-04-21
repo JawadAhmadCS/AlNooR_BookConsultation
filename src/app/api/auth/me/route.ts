@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({
+    id: s.sub,
     username: s.username,
     role: s.role,
   });

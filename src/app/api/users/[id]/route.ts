@@ -35,6 +35,12 @@ export async function PATCH(
   if (!updates.password && !updates.role) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
+  if (updates.role !== undefined && id === s.sub) {
+    return NextResponse.json(
+      { error: "You cannot change your own role" },
+      { status: 400 }
+    );
+  }
   const out = await updateDashboardUser(id, updates);
   if (out === "not_found") {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

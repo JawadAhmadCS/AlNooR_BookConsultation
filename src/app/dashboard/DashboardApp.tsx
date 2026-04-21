@@ -12,56 +12,87 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const dashCss = `
-.dash{min-height:100vh;background:linear-gradient(165deg,#0c1117 0%,#111a28 45%,#0d1520 100%);color:#e8edf4;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap");
+.dash{min-height:100vh;background:radial-gradient(ellipse 120% 80% at 50% -20%,rgba(45,212,191,0.12),transparent 50%),linear-gradient(165deg,#070b10 0%,#0f1724 40%,#0a0f18 100%);color:#e8edf4;font-family:"DM Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .dash .inner{max-width:1320px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
-.dash .top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem}
-.dash .title{margin:0;font-size:1.65rem;font-weight:700;letter-spacing:-0.03em;background:linear-gradient(120deg,#5eead4,#38bdf8,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
-.dash .sub{margin:0.35rem 0 0;color:#8b9aaf;font-size:0.92rem;max-width:42rem}
-.dash .meta{color:#94a3b8;font-size:0.85rem}
+.dash .heroBar{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1.25rem;margin-bottom:1.5rem;padding:1.35rem 1.5rem;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(135deg,rgba(20,27,36,0.95),rgba(15,23,36,0.85));box-shadow:0 18px 50px rgba(0,0,0,0.35)}
+.dash .top{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1rem}
+.dash .title{margin:0;font-size:1.75rem;font-weight:700;letter-spacing:-0.03em;background:linear-gradient(120deg,#5eead4,#7dd3fc,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dash .sub{margin:0.4rem 0 0;color:#94a3b8;font-size:0.95rem;max-width:44rem;line-height:1.55}
+.dash .meta{color:#64748b;font-size:0.82rem;margin-top:0.35rem}
 .dash .actions{display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center}
-.dash .btn{padding:0.5rem 0.95rem;border-radius:10px;font-size:0.88rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(26,35,50,0.9);color:#e8edf4}
-.dash .btnPrimary{border:none;background:linear-gradient(135deg,#5eead4,#2dd4bf);color:#042f2e}
-.dash .btnDanger{border-color:rgba(248,113,113,0.4);color:#fca5a5}
-.dash .link{color:#5eead4;text-decoration:none;font-size:0.9rem}
-.dash .tabs{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1.25rem}
-.dash .tab{padding:0.45rem 0.95rem;border-radius:999px;font-size:0.85rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#94a3b8}
-.dash .tab.on{background:rgba(94,234,212,0.12);border-color:rgba(94,234,212,0.35);color:#5eead4}
-.dash .error{color:#fca5a5;margin:0 0 1rem;padding:0.75rem 1rem;border-radius:10px;background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.25)}
-.dash .tableWrap{border-radius:16px;overflow:auto;border:1px solid rgba(255,255,255,0.08);background:rgba(20,27,36,0.85)}
+.dash .btn{padding:0.55rem 1.05rem;border-radius:11px;font-size:0.88rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(30,41,59,0.6);color:#e8edf4;transition:background .2s,border-color .2s,transform .15s}
+.dash .btn:hover{background:rgba(51,65,85,0.55);border-color:rgba(94,234,212,0.25)}
+.dash .btnPrimary{border:none;background:linear-gradient(135deg,#2dd4bf,#14b8a6);color:#042f2e;box-shadow:0 4px 20px rgba(45,212,191,0.25)}
+.dash .btnPrimary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(45,212,191,0.35)}
+.dash .link{color:#5eead4;text-decoration:none;font-size:0.9rem;font-weight:500}
+.dash .link:hover{text-decoration:underline}
+.dash .tabs{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.5rem;padding:0.35rem;border-radius:14px;background:rgba(15,23,42,0.5);border:1px solid rgba(255,255,255,0.06);width:fit-content;max-width:100%}
+.dash .tab{padding:0.5rem 1.1rem;border-radius:10px;font-size:0.86rem;font-weight:600;cursor:pointer;border:1px solid transparent;background:transparent;color:#94a3b8;transition:color .2s,background .2s}
+.dash .tab:hover{color:#cbd5e1}
+.dash .tab.on{background:rgba(45,212,191,0.12);border-color:rgba(45,212,191,0.28);color:#5eead4}
+.dash .error{color:#fecaca;margin:0 0 1rem;padding:0.85rem 1.1rem;border-radius:12px;background:rgba(127,29,29,0.25);border:1px solid rgba(248,113,113,0.25)}
+.dash .panel{border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:rgba(15,23,42,0.45);padding:1.35rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 12px 40px rgba(0,0,0,0.2)}
+.dash .panelHead{margin:0 0 0.35rem;font-size:1.1rem;font-weight:600;color:#f1f5f9;letter-spacing:-0.02em}
+.dash .panelLead{margin:0 0 1.25rem;color:#94a3b8;font-size:0.88rem;line-height:1.5;max-width:52rem}
+.dash .tableWrap{border-radius:14px;overflow:auto;border:1px solid rgba(255,255,255,0.07);background:rgba(12,17,24,0.55)}
 .dash .table{width:100%;border-collapse:collapse;font-size:0.875rem}
-.dash .th{text-align:left;padding:0.85rem 1rem;font-weight:600;color:#94a3b8;text-transform:uppercase;font-size:0.72rem;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(12,17,23,0.95)}
-.dash .tr{border-bottom:1px solid rgba(255,255,255,0.05)}
-.dash .td{padding:0.75rem 1rem;color:#e2e8f0}
-.dash .tdMuted{padding:0.75rem 1rem;color:#94a3b8;font-size:0.82rem}
-.dash .empty{padding:2.5rem 1.5rem;text-align:center;color:#8b9aaf}
-.dash .statusSelect{padding:0.4rem 0.55rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#141b24;color:#e8edf4;font-size:0.82rem;min-width:118px}
-.dash .rowActions{display:flex;flex-wrap:wrap;gap:0.35rem}
-.dash .iconBtn{padding:0.35rem 0.65rem;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(26,35,50,0.8);color:#cbd5e1}
-.dash .iconBtn:disabled{opacity:0.45;cursor:not-allowed}
-.dash .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:grid;place-items:center;z-index:50;padding:1rem}
-.dash .modal{width:100%;max-width:440px;border-radius:16px;border:1px solid rgba(255,255,255,0.1);background:#141b24;padding:1.35rem 1.5rem}
-.dash .modal h2{margin:0 0 1rem;font-size:1.1rem;color:#f1f5f9}
+.dash .th{text-align:left;padding:0.9rem 1rem;font-weight:600;color:#94a3b8;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.07em;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(7,11,17,0.85)}
+.dash .tr{border-bottom:1px solid rgba(255,255,255,0.04)}
+.dash .tr:hover{background:rgba(45,212,191,0.03)}
+.dash .td{padding:0.8rem 1rem;color:#e2e8f0}
+.dash .tdMuted{padding:0.8rem 1rem;color:#94a3b8;font-size:0.82rem}
+.dash .empty{padding:2.75rem 1.5rem;text-align:center;color:#64748b}
+.dash .statusSelect{padding:0.45rem 0.6rem;border-radius:9px;border:1px solid rgba(255,255,255,0.1);background:#0f1724;color:#e8edf4;font-size:0.82rem;min-width:120px}
+.dash .statusSelect:disabled{opacity:0.55;cursor:not-allowed}
+.dash .rowActions{display:flex;flex-wrap:wrap;gap:0.4rem}
+.dash .iconBtn{padding:0.4rem 0.75rem;border-radius:9px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(30,41,59,0.5);color:#cbd5e1;transition:background .15s,border-color .15s}
+.dash .iconBtn:hover{background:rgba(51,65,85,0.45);border-color:rgba(94,234,212,0.2)}
+.dash .iconBtn:disabled{opacity:0.4;cursor:not-allowed}
+.dash .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:50;padding:1rem}
+.dash .modal{width:100%;max-width:440px;border-radius:18px;border:1px solid rgba(255,255,255,0.1);background:#111827;padding:1.5rem 1.6rem;box-shadow:0 24px 80px rgba(0,0,0,0.55)}
+.dash .modal h2{margin:0 0 1rem;font-size:1.12rem;color:#f8fafc}
 .dash .field{margin-bottom:0.85rem}
-.dash .field label{display:block;font-size:0.72rem;font-weight:600;text-transform:uppercase;color:#94a3b8;margin-bottom:0.35rem}
-.dash .field input,.dash .field select{width:100%;padding:0.55rem 0.65rem;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#0c1117;color:#e8edf4;font-size:0.9rem}
+.dash .field label{display:block;font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:0.4rem}
+.dash .field input,.dash .field select{width:100%;padding:0.6rem 0.7rem;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#0c1117;color:#e8edf4;font-size:0.9rem}
 .dash .modalActions{display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1.25rem}
-.dash .calNav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:0.75rem}
-.dash .calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0.35rem;font-size:0.78rem}
-.dash .calHead{color:#64748b;font-weight:600;text-align:center;padding:0.25rem}
-.dash .calCell{min-height:88px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(12,17,23,0.5);padding:0.35rem;vertical-align:top}
-.dash .calCell.muted{opacity:0.35}
-.dash .calDay{font-weight:700;color:#cbd5e1;font-size:0.75rem}
-.dash .calItem{font-size:0.7rem;color:#94a3b8;margin-top:0.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dash .statGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;margin-bottom:1.25rem}
-.dash .statCard{border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1rem;background:rgba(12,17,23,0.6)}
-.dash .statCard strong{display:block;font-size:1.5rem;color:#5eead4;font-family:Georgia,serif}
-.dash .statCard span{font-size:0.8rem;color:#94a3b8}
-.dash .barRow{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.45rem;font-size:0.82rem}
-.dash .barRow span:first-child{flex:0 0 38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1}
-.dash .barBg{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden}
-.dash .barFi{height:100%;background:linear-gradient(90deg,#5eead4,#38bdf8);border-radius:4px}
-.dash .teamForm{display:grid;grid-template-columns:1fr 1fr auto;gap:0.5rem;align-items:end;margin-bottom:1.25rem}
-@media(max-width:720px){.dash .teamForm{grid-template-columns:1fr}}
+.dash .calToolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.dash .calTitle{font-size:1.2rem;font-weight:700;color:#f1f5f9;letter-spacing:-0.02em}
+.dash .calNavBtns{display:flex;gap:0.5rem}
+.dash .calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:0.45rem;font-size:0.78rem}
+.dash .calHead{color:#64748b;font-weight:600;text-align:center;padding:0.4rem 0.2rem;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em}
+.dash .calCell{min-height:96px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(12,17,24,0.65);padding:0.45rem;transition:border-color .2s,box-shadow .2s}
+.dash .calCell.muted{opacity:0.25;min-height:72px}
+.dash .calCell.today{border-color:rgba(45,212,191,0.45);box-shadow:0 0 0 1px rgba(45,212,191,0.15)}
+.dash .calCell.hasAppts{background:rgba(45,212,191,0.04)}
+.dash .calDayNum{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem}
+.dash .calDay{font-weight:700;color:#e2e8f0;font-size:0.8rem}
+.dash .calBadge{font-size:0.62rem;font-weight:700;padding:0.12rem 0.4rem;border-radius:6px;background:rgba(45,212,191,0.15);color:#5eead4}
+.dash .calItem{font-size:0.68rem;color:#94a3b8;margin-top:0.22rem;padding:0.2rem 0.35rem;border-radius:6px;background:rgba(255,255,255,0.03);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash .statGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.dash .statCard{border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:1.15rem 1.2rem;background:linear-gradient(145deg,rgba(30,41,59,0.5),rgba(15,23,42,0.4));position:relative;overflow:hidden}
+.dash .statCard::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(45,212,191,0.06),transparent 60%);pointer-events:none}
+.dash .statCard strong{position:relative;display:block;font-size:1.65rem;font-weight:700;color:#5eead4;letter-spacing:-0.02em}
+.dash .statCard span{position:relative;font-size:0.82rem;color:#94a3b8;line-height:1.4}
+.dash .analyticsSplit{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:900px){.dash .analyticsSplit{grid-template-columns:1fr}}
+.dash .barBlock{margin-bottom:1.5rem}
+.dash .barBlock h4{margin:0 0 0.75rem;font-size:0.82rem;font-weight:600;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.06em}
+.dash .barRow{display:flex;align-items:center;gap:0.55rem;margin-bottom:0.5rem;font-size:0.84rem}
+.dash .barRow span:first-child{flex:0 0 36%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1}
+.dash .barBg{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,0.05);overflow:hidden}
+.dash .barFi{height:100%;background:linear-gradient(90deg,#2dd4bf,#38bdf8);border-radius:5px;transition:width .3s ease}
+.dash .barCt{flex:0 0 2rem;text-align:right;font-weight:600;color:#94a3b8;font-size:0.8rem}
+.dash .teamRow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:1rem 1.25rem;margin-bottom:1.5rem}
+.dash .teamField{flex:1 1 160px;min-width:140px}
+.dash .teamField label{display:block;font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:0.4rem}
+.dash .teamField input,.dash .teamField select{width:100%;padding:0.62rem 0.75rem;border-radius:11px;border:1px solid rgba(255,255,255,0.1);background:#0c1117;color:#e8edf4;font-size:0.9rem;box-sizing:border-box}
+.dash .teamField.roleField{flex:0 1 180px;min-width:160px}
+.dash .teamSubmit{flex:0 0 auto;padding:0.62rem 1.35rem;border-radius:11px;border:none;background:linear-gradient(135deg,#2dd4bf,#14b8a6);color:#042f2e;font-weight:700;cursor:pointer;font-size:0.9rem;box-shadow:0 4px 18px rgba(45,212,191,0.25);height:42px;align-self:flex-end}
+.dash .teamSubmit:hover{filter:brightness(1.05)}
+.dash .rolePill{display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.55rem;border-radius:999px;font-size:0.72rem;font-weight:600}
+.dash .rolePill.you{background:rgba(56,189,248,0.12);color:#7dd3fc;border:1px solid rgba(56,189,248,0.25)}
+.dash .userCell{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
 `;
 
 type Status = "pending" | "confirmed" | "cancelled";
@@ -69,9 +100,17 @@ type Tab = "list" | "calendar" | "analytics" | "team";
 
 const STATUSES: Status[] = ["pending", "confirmed", "cancelled"];
 
-type Me = { username: string; role: Role };
+type Me = { id: string; username: string; role: Role };
 
 type TeamUser = { id: string; username: string; role: Role; createdAt: string };
+
+const ALL_ROLES: Role[] = ["viewer", "admin", "superadmin"];
+
+function roleLabel(r: Role): string {
+  if (r === "superadmin") return "Super Admin";
+  if (r === "admin") return "Admin";
+  return "Viewer";
+}
 
 function formatCreatedAt(iso: string) {
   try {
@@ -115,7 +154,7 @@ export default function DashboardApp() {
   const [newUser, setNewUser] = useState({
     username: "",
     password: "",
-    role: "viewer" as "admin" | "viewer",
+    role: "viewer" as Role,
   });
 
   const canEdit = me ? canEditAppointments(me.role) : false;
@@ -195,14 +234,6 @@ export default function DashboardApp() {
     [rows]
   );
 
-  const maxBar = useMemo(() => {
-    const vals = [
-      ...Object.values(analytics.byStatus),
-      ...analytics.topServices.map((t) => t.count),
-    ];
-    return Math.max(1, ...vals);
-  }, [analytics]);
-
   const byDayMap = useMemo(() => {
     const m: Record<string, Appointment[]> = {};
     for (const r of rows) {
@@ -213,6 +244,40 @@ export default function DashboardApp() {
     }
     return m;
   }, [rows]);
+
+  const cal = useMemo(() => {
+    const y = viewMonth.getFullYear();
+    const m = viewMonth.getMonth();
+    const firstDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const cells: { day: number | null; key: string | null }[] = [];
+    for (let i = 0; i < firstDow; i++) cells.push({ day: null, key: null });
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      cells.push({ day: d, key });
+    }
+    return {
+      cells,
+      label: viewMonth.toLocaleString(undefined, {
+        month: "long",
+        year: "numeric",
+      }),
+    };
+  }, [viewMonth]);
+
+  const todayKey = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const maxBarStatus = useMemo(
+    () => Math.max(1, ...Object.values(analytics.byStatus)),
+    [analytics.byStatus]
+  );
+  const maxBarService = useMemo(
+    () => Math.max(1, ...analytics.topServices.map((t) => t.count), 1),
+    [analytics.topServices]
+  );
 
   function openEdit(r: Appointment) {
     if (!canEdit) return;
@@ -336,7 +401,7 @@ export default function DashboardApp() {
       setError(j.error || "Could not create user");
       return;
     }
-    setNewUser({ username: "", password: "", role: "viewer" });
+    setNewUser({ username: "", password: "", role: "viewer" as Role });
     await loadTeam();
   }
 
@@ -355,6 +420,7 @@ export default function DashboardApp() {
   }
 
   async function changeTeamRole(id: string, role: Role) {
+    if (me && id === me.id) return;
     const res = await fetch(`/api/users/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -386,20 +452,6 @@ export default function DashboardApp() {
     await loadTeam();
   }
 
-  const cal = useMemo(() => {
-    const y = viewMonth.getFullYear();
-    const m = viewMonth.getMonth();
-    const firstDow = new Date(y, m, 1).getDay();
-    const daysInMonth = new Date(y, m + 1, 0).getDate();
-    const cells: { day: number | null; key: string | null }[] = [];
-    for (let i = 0; i < firstDow; i++) cells.push({ day: null, key: null });
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      cells.push({ day: d, key });
-    }
-    return { cells, label: viewMonth.toLocaleString(undefined, { month: "long", year: "numeric" }) };
-  }, [viewMonth]);
-
   if (!me) {
     return (
       <div className="dash">
@@ -415,23 +467,25 @@ export default function DashboardApp() {
     <div className="dash">
       <style dangerouslySetInnerHTML={{ __html: dashCss }} />
       <div className="inner">
-        <header className="top">
-          <div>
-            <h1 className="title">Appointments</h1>
+        <header className="heroBar">
+          <div className="top" style={{ flex: 1, minWidth: 0 }}>
+            <h1 className="title">Appointments dashboard</h1>
             <p className="sub">
-              Signed in as <strong>{me.username}</strong> ({me.role}). Online
-              bookings post to{" "}
-              <code style={{ color: "#5eead4", fontSize: "0.88em" }}>
+              Signed in as <strong>{me.username}</strong> ·{" "}
+              <span style={{ color: "#5eead4" }}>{roleLabel(me.role)}</span>.
+              Public bookings post to{" "}
+              <code style={{ color: "#7dd3fc", fontSize: "0.86em" }}>
                 {BOOKING_ROUTES.create}
               </code>
             </p>
             <p className="meta">
-              List auto-refreshes every {BOOKING_ROUTES.pollMs / 1000}s.
+              Table refreshes every {BOOKING_ROUTES.pollMs / 1000}s · Al Noor
+              Care Hospital
             </p>
           </div>
           <div className="actions">
             <button type="button" className="btnPrimary" onClick={() => loadRows()}>
-              Refresh
+              Refresh data
             </button>
             <a className="link" href="/">
               Hospital site
@@ -448,7 +502,7 @@ export default function DashboardApp() {
             className={`tab ${tab === "list" ? "on" : ""}`}
             onClick={() => setTab("list")}
           >
-            List
+            List view
           </button>
           {superUser ? (
             <>
@@ -471,7 +525,7 @@ export default function DashboardApp() {
                 className={`tab ${tab === "team" ? "on" : ""}`}
                 onClick={() => setTab("team")}
               >
-                Team
+                Team & roles
               </button>
             </>
           ) : null}
@@ -573,31 +627,39 @@ export default function DashboardApp() {
         ) : null}
 
         {tab === "calendar" && superUser ? (
-          <div>
-            <div className="calNav">
-              <button
-                type="button"
-                className="btn"
-                onClick={() =>
-                  setViewMonth(
-                    (d) => new Date(d.getFullYear(), d.getMonth() - 1, 1)
-                  )
-                }
-              >
-                ← Prev
-              </button>
-              <strong style={{ color: "#e2e8f0" }}>{cal.label}</strong>
-              <button
-                type="button"
-                className="btn"
-                onClick={() =>
-                  setViewMonth(
-                    (d) => new Date(d.getFullYear(), d.getMonth() + 1, 1)
-                  )
-                }
-              >
-                Next →
-              </button>
+          <div className="panel">
+            <h2 className="panelHead">Appointment calendar</h2>
+            <p className="panelLead">
+              OPD-style view of bookings by appointment date. Use arrows to move
+              between months. Today is highlighted; days with visits show a count
+              badge.
+            </p>
+            <div className="calToolbar">
+              <div className="calTitle">{cal.label}</div>
+              <div className="calNavBtns">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    setViewMonth(
+                      (d) => new Date(d.getFullYear(), d.getMonth() - 1, 1)
+                    )
+                  }
+                >
+                  ← Previous
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() =>
+                    setViewMonth(
+                      (d) => new Date(d.getFullYear(), d.getMonth() + 1, 1)
+                    )
+                  }
+                >
+                  Next →
+                </button>
+              </div>
             </div>
             <div className="calGrid">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -607,17 +669,29 @@ export default function DashboardApp() {
               ))}
               {cal.cells.map((c, i) => {
                 if (c.day == null || !c.key) {
-                  return (
-                    <div key={`e-${i}`} className="calCell muted" />
-                  );
+                  return <div key={`e-${i}`} className="calCell muted" />;
                 }
                 const list = byDayMap[c.key] || [];
+                const isToday = c.key === todayKey;
+                const cls =
+                  "calCell" +
+                  (isToday ? " today" : "") +
+                  (list.length > 0 ? " hasAppts" : "");
                 return (
-                  <div key={c.key} className="calCell">
-                    <div className="calDay">{c.day}</div>
+                  <div key={c.key} className={cls}>
+                    <div className="calDayNum">
+                      <span className="calDay">{c.day}</span>
+                      {list.length > 0 ? (
+                        <span className="calBadge">{list.length}</span>
+                      ) : null}
+                    </div>
                     {list.slice(0, 4).map((a) => (
-                      <div key={a.id} className="calItem" title={`${a.name} · ${a.time}`}>
-                        {a.time} {a.name}
+                      <div
+                        key={a.id}
+                        className="calItem"
+                        title={`${a.name} · ${a.time} · ${a.service}`}
+                      >
+                        {a.time} · {a.name}
                       </div>
                     ))}
                     {list.length > 4 ? (
@@ -631,64 +705,98 @@ export default function DashboardApp() {
         ) : null}
 
         {tab === "analytics" && superUser ? (
-          <div>
+          <div className="panel">
+            <h2 className="panelHead">Analytics overview</h2>
+            <p className="panelLead">
+              Summary metrics adapt to whatever statuses and services exist in your
+              current dataset — useful as volumes or labels change over time.
+            </p>
             <div className="statGrid">
               <div className="statCard">
                 <strong>{analytics.total}</strong>
-                <span>Total appointments (loaded)</span>
+                <span>Total appointments in view</span>
               </div>
               <div className="statCard">
                 <strong>{Object.keys(analytics.byStatus).length}</strong>
-                <span>Distinct status values in data</span>
+                <span>Distinct status labels</span>
               </div>
               <div className="statCard">
                 <strong>{Object.keys(analytics.byCity).length}</strong>
-                <span>Cities in sample</span>
+                <span>Cities represented</span>
               </div>
             </div>
-            <h3 style={{ fontSize: "1rem", color: "#cbd5e1", margin: "0 0 0.75rem" }}>
-              By status (dynamic keys)
-            </h3>
-            {Object.entries(analytics.byStatus).map(([k, v]) => (
-              <div key={k} className="barRow">
-                <span title={k}>{k}</span>
-                <div className="barBg">
-                  <div
-                    className="barFi"
-                    style={{
-                      width: `${Math.min(100, (v / maxBar) * 100)}%`,
-                    }}
-                  />
+            <div className="analyticsSplit">
+              <div>
+                <div className="barBlock">
+                  <h4>By status</h4>
+                  {Object.entries(analytics.byStatus).length === 0 ? (
+                    <p className="meta" style={{ margin: 0 }}>
+                      No status data yet.
+                    </p>
+                  ) : (
+                    Object.entries(analytics.byStatus).map(([k, v]) => (
+                      <div key={k} className="barRow">
+                        <span title={k}>{k}</span>
+                        <div className="barBg">
+                          <div
+                            className="barFi"
+                            style={{
+                              width: `${Math.min(100, (v / maxBarStatus) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="barCt">{v}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <span style={{ flex: "0 0 2rem", textAlign: "right" }}>{v}</span>
               </div>
-            ))}
-            <h3 style={{ fontSize: "1rem", color: "#cbd5e1", margin: "1.25rem 0 0.75rem" }}>
-              Top services
-            </h3>
-            {analytics.topServices.map(({ name, count }) => (
-              <div key={name} className="barRow">
-                <span title={name}>{name}</span>
-                <div className="barBg">
-                  <div
-                    className="barFi"
-                    style={{
-                      width: `${Math.min(100, (count / maxBar) * 100)}%`,
-                    }}
-                  />
+              <div>
+                <div className="barBlock">
+                  <h4>Top services</h4>
+                  {analytics.topServices.length === 0 ? (
+                    <p className="meta" style={{ margin: 0 }}>
+                      No service data yet.
+                    </p>
+                  ) : (
+                    analytics.topServices.map(({ name, count }) => (
+                      <div key={name} className="barRow">
+                        <span title={name}>{name}</span>
+                        <div className="barBg">
+                          <div
+                            className="barFi"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (count / maxBarService) * 100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="barCt">{count}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <span style={{ flex: "0 0 2rem", textAlign: "right" }}>{count}</span>
               </div>
-            ))}
+            </div>
           </div>
         ) : null}
 
         {tab === "team" && manageTeam ? (
-          <div>
-            <form className="teamForm" onSubmit={addTeamUser}>
-              <div className="field" style={{ margin: 0 }}>
-                <label>New username</label>
+          <div className="panel">
+            <h2 className="panelHead">Team & access</h2>
+            <p className="panelLead">
+              Create staff logins and assign roles. You cannot change your own role
+              from here; another super admin can update it if needed.
+            </p>
+            <form className="teamRow" onSubmit={addTeamUser}>
+              <div className="teamField">
+                <label htmlFor="nu-user">Username</label>
                 <input
+                  id="nu-user"
+                  autoComplete="off"
+                  placeholder="e.g. reception1"
                   value={newUser.username}
                   onChange={(e) =>
                     setNewUser((u) => ({ ...u, username: e.target.value }))
@@ -696,10 +804,13 @@ export default function DashboardApp() {
                   required
                 />
               </div>
-              <div className="field" style={{ margin: 0 }}>
-                <label>Temporary password</label>
+              <div className="teamField">
+                <label htmlFor="nu-pass">Temporary password</label>
                 <input
+                  id="nu-pass"
                   type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
                   value={newUser.password}
                   onChange={(e) =>
                     setNewUser((u) => ({ ...u, password: e.target.value }))
@@ -707,22 +818,26 @@ export default function DashboardApp() {
                   required
                 />
               </div>
-              <div className="field" style={{ margin: 0 }}>
-                <label>Role</label>
+              <div className="teamField roleField">
+                <label htmlFor="nu-role">Role</label>
                 <select
+                  id="nu-role"
                   value={newUser.role}
                   onChange={(e) =>
                     setNewUser((u) => ({
                       ...u,
-                      role: e.target.value as "admin" | "viewer",
+                      role: e.target.value as Role,
                     }))
                   }
                 >
-                  <option value="viewer">Viewer</option>
-                  <option value="admin">Admin</option>
+                  {ALL_ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {roleLabel(r)}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <button type="submit" className="btnPrimary">
+              <button type="submit" className="teamSubmit">
                 Add user
               </button>
             </form>
@@ -730,50 +845,79 @@ export default function DashboardApp() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th className="th">Username</th>
+                    <th className="th">User</th>
                     <th className="th">Role</th>
                     <th className="th">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {teamUsers.map((u) => (
-                    <tr key={u.id} className="tr">
-                      <td className="td">{u.username}</td>
-                      <td className="td">
-                        <select
-                          className="statusSelect"
-                          value={u.role}
-                          onChange={(e) =>
-                            changeTeamRole(u.id, e.target.value as Role)
-                          }
-                        >
-                          <option value="viewer">viewer</option>
-                          <option value="admin">admin</option>
-                          <option value="superadmin">superadmin</option>
-                        </select>
-                      </td>
-                      <td className="td">
-                        <button
-                          type="button"
-                          className="iconBtn"
-                          onClick={() => resetTeamPassword(u.id, u.username)}
-                        >
-                          Reset password
-                        </button>
-                        <button
-                          type="button"
-                          className="iconBtn"
-                          style={{
-                            borderColor: "rgba(248,113,113,0.35)",
-                            color: "#fca5a5",
-                          }}
-                          onClick={() => deleteTeamUser(u.id, u.username)}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {teamUsers.map((u) => {
+                    const isSelf = me.id === u.id;
+                    return (
+                      <tr key={u.id} className="tr">
+                        <td className="td">
+                          <div className="userCell">
+                            <span>{u.username}</span>
+                            {isSelf ? (
+                              <span className="rolePill you">You</span>
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="td">
+                          <select
+                            className="statusSelect"
+                            title={
+                              isSelf
+                                ? "You cannot change your own role here"
+                                : undefined
+                            }
+                            value={u.role}
+                            disabled={isSelf}
+                            onChange={(e) =>
+                              changeTeamRole(u.id, e.target.value as Role)
+                            }
+                          >
+                            {ALL_ROLES.map((r) => (
+                              <option key={r} value={r}>
+                                {roleLabel(r)}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="td">
+                          <div className="rowActions">
+                            <button
+                              type="button"
+                              className="iconBtn"
+                              onClick={() =>
+                                resetTeamPassword(u.id, u.username)
+                              }
+                            >
+                              Reset password
+                            </button>
+                            <button
+                              type="button"
+                              className="iconBtn"
+                              disabled={isSelf}
+                              style={
+                                isSelf
+                                  ? undefined
+                                  : {
+                                      borderColor: "rgba(248,113,113,0.35)",
+                                      color: "#fca5a5",
+                                    }
+                              }
+                              onClick={() =>
+                                deleteTeamUser(u.id, u.username)
+                              }
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
