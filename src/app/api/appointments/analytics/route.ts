@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/auth-session";
 import { listAppointments } from "@/bookings";
 import { computeAppointmentAnalytics } from "@/appointment-analytics";
-import { canUseSuperFeatures } from "@/roles";
+import { canViewCalendarAndAnalytics } from "@/roles";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   if (!s) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!canUseSuperFeatures(s.role)) {
+  if (!canViewCalendarAndAnalytics(s.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const appointments = await listAppointments();

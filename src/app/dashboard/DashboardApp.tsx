@@ -5,10 +5,14 @@ import {
   computeAppointmentAnalytics,
   normalizeDayKey,
 } from "@/appointment-analytics";
-import { canEditAppointments, canManageUsers, canUseSuperFeatures } from "@/roles";
+import {
+  canEditAppointments,
+  canManageUsers,
+  canViewCalendarAndAnalytics,
+} from "@/roles";
 import type { Role } from "@/roles";
 import type { Appointment } from "@/bookings";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const dashCss = `
@@ -65,6 +69,11 @@ const dashCss = `
 .dash .calCell.muted{opacity:0.25;min-height:72px}
 .dash .calCell.today{border-color:rgba(45,212,191,0.45);box-shadow:0 0 0 1px rgba(45,212,191,0.15)}
 .dash .calCell.hasAppts{background:rgba(45,212,191,0.04)}
+.dash .calCell.calSelected{border-color:rgba(167,139,250,0.55);box-shadow:0 0 0 2px rgba(167,139,250,0.18)}
+.dash .calCellBtn{all:unset;box-sizing:border-box;display:block;width:100%;min-height:96px;border-radius:12px;padding:0.45rem;cursor:pointer;text-align:left;transition:transform .12s}
+.dash .calCellBtn:focus-visible{outline:2px solid rgba(45,212,191,0.6);outline-offset:2px}
+.dash .calCellBtn:hover:not(:disabled){transform:scale(1.02)}
+.dash .calCell.muted .calPlaceholder{min-height:72px}
 .dash .calDayNum{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.35rem}
 .dash .calDay{font-weight:700;color:#e2e8f0;font-size:0.8rem}
 .dash .calBadge{font-size:0.62rem;font-weight:700;padding:0.12rem 0.4rem;border-radius:6px;background:rgba(45,212,191,0.15);color:#5eead4}
@@ -83,6 +92,22 @@ const dashCss = `
 .dash .barBg{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,0.05);overflow:hidden}
 .dash .barFi{height:100%;background:linear-gradient(90deg,#2dd4bf,#38bdf8);border-radius:5px;transition:width .3s ease}
 .dash .barCt{flex:0 0 2rem;text-align:right;font-weight:600;color:#94a3b8;font-size:0.8rem}
+.dash .trendPanel{border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:linear-gradient(165deg,rgba(15,23,42,0.92),rgba(10,14,22,0.72));padding:1.35rem 1.4rem 1.15rem;margin-bottom:1.5rem;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)}
+.dash .trendHead{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.1rem}
+.dash .trendTitle{margin:0;font-size:1rem;font-weight:600;color:#f1f5f9}
+.dash .trendControls{display:flex;flex-wrap:wrap;gap:0.9rem 1.1rem;align-items:flex-end}
+.dash .granTabs{display:flex;gap:0.35rem;padding:0.28rem;border-radius:12px;background:rgba(7,11,17,0.55);border:1px solid rgba(255,255,255,0.06)}
+.dash .granTab{padding:0.42rem 0.9rem;border-radius:9px;font-size:0.8rem;font-weight:600;border:1px solid transparent;background:transparent;color:#94a3b8;cursor:pointer;transition:background .15s,color .15s}
+.dash .granTab:hover{color:#cbd5e1}
+.dash .granTab.on{background:rgba(45,212,191,0.14);border-color:rgba(45,212,191,0.32);color:#5eead4}
+.dash .datePair{display:flex;gap:0.65rem;flex-wrap:wrap;align-items:flex-end}
+.dash .miniField label{display:block;font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:0.32rem}
+.dash .miniField input{padding:0.48rem 0.6rem;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:#0c1117;color:#e8edf4;font-size:0.85rem}
+.dash .trendSvgWrap{width:100%;overflow-x:auto;padding:0.25rem 0}
+.dash .trendSvg{min-width:280px;width:100%;height:auto;display:block}
+.dash .trendFoot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.5rem;margin-top:0.65rem;font-size:0.76rem;color:#64748b}
+.dash .calDayDetail{margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.06)}
+.dash .calDayDetail h3{margin:0 0 1rem;font-size:1.02rem;font-weight:600;color:#f1f5f9}
 .dash .teamRow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:1rem 1.25rem;margin-bottom:1.5rem}
 .dash .teamField{flex:1 1 160px;min-width:140px}
 .dash .teamField label{display:block;font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:0.4rem}
@@ -127,6 +152,308 @@ function labelStatus(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+type ChartGranularity = "week" | "month" | "year";
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function parseYMD(s: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s.trim());
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const dt = new Date(y, mo - 1, d);
+  if (
+    dt.getFullYear() !== y ||
+    dt.getMonth() !== mo - 1 ||
+    dt.getDate() !== d
+  )
+    return null;
+  return dt;
+}
+
+function weekStartSunday(d: Date): Date {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - x.getDay());
+  return x;
+}
+
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+}
+
+function formatWeekLabel(ws: Date): string {
+  const we = addDays(ws, 6);
+  const o: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  return `${ws.toLocaleDateString(undefined, o)} – ${we.toLocaleDateString(undefined, o)}`;
+}
+
+function buildAppointmentTrend(
+  appointments: Appointment[],
+  mode: ChartGranularity,
+  fromStr: string,
+  toStr: string
+): { key: string; label: string; count: number }[] {
+  const fromD = parseYMD(fromStr);
+  const toD = parseYMD(toStr);
+  if (!fromD || !toD) return [];
+  const from = fromD > toD ? toD : fromD;
+  const to = fromD > toD ? fromD : toD;
+  const fromK = `${from.getFullYear()}-${pad2(from.getMonth() + 1)}-${pad2(from.getDate())}`;
+  const toK = `${to.getFullYear()}-${pad2(to.getMonth() + 1)}-${pad2(to.getDate())}`;
+
+  const inRange = appointments.filter((a) => {
+    const dk = normalizeDayKey(a.date);
+    return dk && dk >= fromK && dk <= toK;
+  });
+
+  if (mode === "year") {
+    const counts: Record<string, number> = {};
+    for (const a of inRange) {
+      const dk = normalizeDayKey(a.date);
+      if (!dk) continue;
+      const y = dk.slice(0, 4);
+      counts[y] = (counts[y] || 0) + 1;
+    }
+    const y0 = from.getFullYear();
+    const y1 = to.getFullYear();
+    const out: { key: string; label: string; count: number }[] = [];
+    for (let y = y0; y <= y1; y++) {
+      const ys = String(y);
+      out.push({ key: ys, label: ys, count: counts[ys] || 0 });
+    }
+    return out;
+  }
+
+  if (mode === "month") {
+    const counts: Record<string, number> = {};
+    for (const a of inRange) {
+      const dk = normalizeDayKey(a.date);
+      if (!dk) continue;
+      const mk = dk.slice(0, 7);
+      counts[mk] = (counts[mk] || 0) + 1;
+    }
+    const out: { key: string; label: string; count: number }[] = [];
+    const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+    const last = new Date(to.getFullYear(), to.getMonth(), 1);
+    while (cur.getTime() <= last.getTime()) {
+      const mk = `${cur.getFullYear()}-${pad2(cur.getMonth() + 1)}`;
+      out.push({
+        key: mk,
+        label: new Date(
+          cur.getFullYear(),
+          cur.getMonth(),
+          1
+        ).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+        count: counts[mk] || 0,
+      });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return out;
+  }
+
+  const counts: Record<string, number> = {};
+  for (const a of inRange) {
+    const dk = normalizeDayKey(a.date);
+    if (!dk) continue;
+    const d = parseYMD(dk);
+    if (!d) continue;
+    const ws = weekStartSunday(d);
+    const wk = `${ws.getFullYear()}-${pad2(ws.getMonth() + 1)}-${pad2(ws.getDate())}`;
+    counts[wk] = (counts[wk] || 0) + 1;
+  }
+  let ws = weekStartSunday(from);
+  const lastWs = weekStartSunday(to);
+  const out: { key: string; label: string; count: number }[] = [];
+  while (ws.getTime() <= lastWs.getTime()) {
+    const wk = `${ws.getFullYear()}-${pad2(ws.getMonth() + 1)}-${pad2(ws.getDate())}`;
+    out.push({
+      key: wk,
+      label: formatWeekLabel(ws),
+      count: counts[wk] || 0,
+    });
+    ws = addDays(ws, 7);
+  }
+  return out;
+}
+
+function compareAppointmentTime(a: Appointment, b: Appointment): number {
+  const ka = timeSortKey(a.time);
+  const kb = timeSortKey(b.time);
+  if (ka !== kb) return ka - kb;
+  return a.name.localeCompare(b.name);
+}
+
+function timeSortKey(t: string): number {
+  const s = (t || "").trim();
+  if (!s) return 0;
+  const d1 = Date.parse(`1970-01-01 ${s}`);
+  if (!Number.isNaN(d1)) return d1;
+  const d2 = Date.parse(`1970-01-01T${s}`);
+  if (!Number.isNaN(d2)) return d2;
+  return 0;
+}
+
+function defaultChartFrom(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 5);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-01`;
+}
+
+function todayYMD(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+type TrendPoint = { key: string; label: string; count: number };
+
+function TrendChart({ uid, series }: { uid: string; series: TrendPoint[] }) {
+  const W = 800;
+  const H = 280;
+  const padL = 48;
+  const padR = 20;
+  const padT = 22;
+  const padB = 58;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const n = series.length;
+  const max = Math.max(1, ...series.map((s) => s.count));
+
+  const gradId = `trend-grad-${uid}`;
+  const glowId = `trend-glow-${uid}`;
+
+  if (n === 0) {
+    return (
+      <p className="meta" style={{ margin: "1rem 0", textAlign: "center" }}>
+        No appointments in this date range. Adjust the from / to dates.
+      </p>
+    );
+  }
+
+  const pts = series.map((t, i) => {
+    const x =
+      n <= 1 ? padL + plotW / 2 : padL + (i / Math.max(1, n - 1)) * plotW;
+    const y = padT + plotH - (t.count / max) * plotH;
+    return { x, y, ...t };
+  });
+
+  const bottomY = padT + plotH;
+  let areaD: string;
+  if (pts.length === 1) {
+    const bw = 28;
+    const p0 = pts[0];
+    areaD = `M ${p0.x - bw / 2},${bottomY} L ${p0.x - bw / 2},${p0.y} L ${p0.x + bw / 2},${p0.y} L ${p0.x + bw / 2},${bottomY} Z`;
+  } else {
+    areaD =
+      `M ${pts[0].x},${bottomY} L ` +
+      pts.map((p) => `${p.x},${p.y}`).join(" L ") +
+      ` L ${pts[pts.length - 1].x},${bottomY} Z`;
+  }
+
+  const lineD =
+    pts.length <= 1
+      ? ""
+      : pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+
+  const gridEls = [];
+  for (let g = 0; g <= 4; g++) {
+    const gy = padT + (g / 4) * plotH;
+    gridEls.push(
+      <line
+        key={g}
+        x1={padL}
+        x2={padL + plotW}
+        y1={gy}
+        y2={gy}
+        stroke="rgba(255,255,255,0.06)"
+        strokeWidth={1}
+      />
+    );
+  }
+
+  const labelStep = Math.max(1, Math.ceil(n / 12));
+  const labelPts = pts.filter(
+    (_, i) => i % labelStep === 0 || i === n - 1
+  );
+
+  const shortLabel = (s: string) =>
+    s.length > 26 ? `${s.slice(0, 24)}…` : s;
+
+  return (
+    <div className="trendSvgWrap">
+      <svg
+        className="trendSvg"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        aria-label="Appointment volume trend chart"
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.45} />
+            <stop offset="55%" stopColor="#38bdf8" stopOpacity={0.12} />
+            <stop offset="100%" stopColor="#0f1724" stopOpacity={0} />
+          </linearGradient>
+          <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        {gridEls}
+        <path d={areaD} fill={`url(#${gradId})`} stroke="none" />
+        {lineD ? (
+          <path
+            d={lineD}
+            fill="none"
+            stroke="#5eead4"
+            strokeWidth={2.75}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter={`url(#${glowId})`}
+          />
+        ) : null}
+        {pts.map((p) => (
+          <circle
+            key={p.key}
+            cx={p.x}
+            cy={p.y}
+            r={pts.length === 1 ? 5 : 4}
+            fill="#0b1220"
+            stroke="#5eead4"
+            strokeWidth={2}
+          />
+        ))}
+        {labelPts.map((p) => (
+          <text
+            key={`lbl-${p.key}`}
+            x={p.x}
+            y={H - 14}
+            fill="#94a3b8"
+            fontSize={10}
+            fontFamily="inherit"
+            textAnchor="middle"
+            transform={`rotate(-28 ${p.x} ${H - 14})`}
+          >
+            {shortLabel(p.label)}
+          </text>
+        ))}
+        <text x={padL - 8} y={padT + 5} fill="#64748b" fontSize={11}>
+          {max}
+        </text>
+        <text x={padL - 8} y={bottomY + 4} fill="#64748b" fontSize={11}>
+          0
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 const emptyForm = {
   name: "",
   phone: "",
@@ -150,6 +477,13 @@ export default function DashboardApp() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+  const [selectedCalKey, setSelectedCalKey] = useState<string>(() =>
+    todayYMD()
+  );
+  const [chartGranularity, setChartGranularity] =
+    useState<ChartGranularity>("month");
+  const [chartFrom, setChartFrom] = useState(() => defaultChartFrom());
+  const [chartTo, setChartTo] = useState(() => todayYMD());
   const [teamUsers, setTeamUsers] = useState<TeamUser[]>([]);
   const [newUser, setNewUser] = useState({
     username: "",
@@ -158,7 +492,7 @@ export default function DashboardApp() {
   });
 
   const canEdit = me ? canEditAppointments(me.role) : false;
-  const superUser = me ? canUseSuperFeatures(me.role) : false;
+  const insightsAccess = me ? canViewCalendarAndAnalytics(me.role) : false;
   const manageTeam = me ? canManageUsers(me.role) : false;
 
   const fetchOpts: RequestInit = { credentials: "include", cache: "no-store" };
@@ -274,10 +608,24 @@ export default function DashboardApp() {
     () => Math.max(1, ...Object.values(analytics.byStatus)),
     [analytics.byStatus]
   );
-  const maxBarService = useMemo(
-    () => Math.max(1, ...analytics.topServices.map((t) => t.count), 1),
-    [analytics.topServices]
+
+  const selectedDayAppointments = useMemo(() => {
+    const list = byDayMap[selectedCalKey] || [];
+    return [...list].sort(compareAppointmentTime);
+  }, [byDayMap, selectedCalKey]);
+
+  const appointmentTrend = useMemo(
+    () =>
+      buildAppointmentTrend(
+        rows,
+        chartGranularity,
+        chartFrom,
+        chartTo
+      ),
+    [rows, chartGranularity, chartFrom, chartTo]
   );
+
+  const chartUid = useId().replace(/:/g, "");
 
   function openEdit(r: Appointment) {
     if (!canEdit) return;
@@ -504,7 +852,7 @@ export default function DashboardApp() {
           >
             List view
           </button>
-          {superUser ? (
+          {insightsAccess ? (
             <>
               <button
                 type="button"
@@ -520,14 +868,16 @@ export default function DashboardApp() {
               >
                 Analytics
               </button>
-              <button
-                type="button"
-                className={`tab ${tab === "team" ? "on" : ""}`}
-                onClick={() => setTab("team")}
-              >
-                Team & roles
-              </button>
             </>
+          ) : null}
+          {manageTeam ? (
+            <button
+              type="button"
+              className={`tab ${tab === "team" ? "on" : ""}`}
+              onClick={() => setTab("team")}
+            >
+              Team & roles
+            </button>
           ) : null}
         </div>
 
@@ -626,13 +976,13 @@ export default function DashboardApp() {
           </div>
         ) : null}
 
-        {tab === "calendar" && superUser ? (
+        {tab === "calendar" && insightsAccess ? (
           <div className="panel">
             <h2 className="panelHead">Appointment calendar</h2>
             <p className="panelLead">
-              OPD-style view of bookings by appointment date. Use arrows to move
-              between months. Today is highlighted; days with visits show a count
-              badge.
+              Click a date to see every booking for that day below the grid.
+              Use arrows to change months. Today is highlighted; days with
+              visits show a count badge.
             </p>
             <div className="calToolbar">
               <div className="calTitle">{cal.label}</div>
@@ -668,48 +1018,108 @@ export default function DashboardApp() {
                 </div>
               ))}
               {cal.cells.map((c, i) => {
-                if (c.day == null || !c.key) {
+                if (c.day == null || c.key == null) {
                   return <div key={`e-${i}`} className="calCell muted" />;
                 }
-                const list = byDayMap[c.key] || [];
-                const isToday = c.key === todayKey;
+                const dayKey = c.key;
+                const list = byDayMap[dayKey] || [];
+                const isToday = dayKey === todayKey;
                 const cls =
                   "calCell" +
                   (isToday ? " today" : "") +
-                  (list.length > 0 ? " hasAppts" : "");
+                  (list.length > 0 ? " hasAppts" : "") +
+                  (selectedCalKey === dayKey ? " calSelected" : "");
                 return (
-                  <div key={c.key} className={cls}>
-                    <div className="calDayNum">
-                      <span className="calDay">{c.day}</span>
-                      {list.length > 0 ? (
-                        <span className="calBadge">{list.length}</span>
-                      ) : null}
-                    </div>
-                    {list.slice(0, 4).map((a) => (
-                      <div
-                        key={a.id}
-                        className="calItem"
-                        title={`${a.name} · ${a.time} · ${a.service}`}
-                      >
-                        {a.time} · {a.name}
+                  <div key={dayKey} className={cls}>
+                    <button
+                      type="button"
+                      className="calCellBtn"
+                      onClick={() => setSelectedCalKey(dayKey)}
+                      aria-pressed={selectedCalKey === dayKey}
+                      aria-label={`Select ${dayKey}, ${list.length} appointment${
+                        list.length === 1 ? "" : "s"
+                      }`}
+                    >
+                      <div className="calDayNum">
+                        <span className="calDay">{c.day}</span>
+                        {list.length > 0 ? (
+                          <span className="calBadge">{list.length}</span>
+                        ) : null}
                       </div>
-                    ))}
-                    {list.length > 4 ? (
-                      <div className="calItem">+{list.length - 4} more</div>
-                    ) : null}
+                      {list.slice(0, 4).map((a) => (
+                        <div
+                          key={a.id}
+                          className="calItem"
+                          title={`${a.name} · ${a.time} · ${a.service}`}
+                        >
+                          {a.time} · {a.name}
+                        </div>
+                      ))}
+                      {list.length > 4 ? (
+                        <div className="calItem">+{list.length - 4} more</div>
+                      ) : null}
+                    </button>
                   </div>
                 );
               })}
             </div>
+            <div className="calDayDetail">
+              <h3>
+                Appointments on{" "}
+                {new Date(selectedCalKey + "T12:00:00").toLocaleDateString(
+                  undefined,
+                  {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }
+                )}
+              </h3>
+              {selectedDayAppointments.length === 0 ? (
+                <p className="meta" style={{ margin: 0 }}>
+                  No appointments on this date.
+                </p>
+              ) : (
+                <div className="tableWrap">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        {["Time", "Name", "Phone", "Service", "City", "Status"].map(
+                          (h) => (
+                            <th key={h} className="th">
+                              {h}
+                            </th>
+                          )
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedDayAppointments.map((r) => (
+                        <tr key={r.id} className="tr">
+                          <td className="td">{r.time}</td>
+                          <td className="td">{r.name}</td>
+                          <td className="td">{r.phone}</td>
+                          <td className="td">{r.service}</td>
+                          <td className="td">{r.city}</td>
+                          <td className="tdMuted">{labelStatus(r.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         ) : null}
 
-        {tab === "analytics" && superUser ? (
+        {tab === "analytics" && insightsAccess ? (
           <div className="panel">
             <h2 className="panelHead">Analytics overview</h2>
             <p className="panelLead">
-              Summary metrics adapt to whatever statuses and services exist in your
-              current dataset — useful as volumes or labels change over time.
+              Summary metrics reflect your current dataset. Use the trend chart to
+              compare appointment volume by week, month, or year within any date
+              range you choose.
             </p>
             <div className="statGrid">
               <div className="statCard">
@@ -725,60 +1135,94 @@ export default function DashboardApp() {
                 <span>Cities represented</span>
               </div>
             </div>
-            <div className="analyticsSplit">
-              <div>
-                <div className="barBlock">
-                  <h4>By status</h4>
-                  {Object.entries(analytics.byStatus).length === 0 ? (
-                    <p className="meta" style={{ margin: 0 }}>
-                      No status data yet.
-                    </p>
-                  ) : (
-                    Object.entries(analytics.byStatus).map(([k, v]) => (
-                      <div key={k} className="barRow">
-                        <span title={k}>{k}</span>
-                        <div className="barBg">
-                          <div
-                            className="barFi"
-                            style={{
-                              width: `${Math.min(100, (v / maxBarStatus) * 100)}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="barCt">{v}</span>
-                      </div>
-                    ))
-                  )}
+
+            <div className="trendPanel">
+              <div className="trendHead">
+                <h3 className="trendTitle">Appointment trend</h3>
+                <div className="trendControls">
+                  <div
+                    className="granTabs"
+                    role="group"
+                    aria-label="Chart granularity"
+                  >
+                    {(
+                      [
+                        ["week", "Weekly"],
+                        ["month", "Monthly"],
+                        ["year", "Yearly"],
+                      ] as const
+                    ).map(([g, lab]) => (
+                      <button
+                        key={g}
+                        type="button"
+                        className={`granTab ${
+                          chartGranularity === g ? "on" : ""
+                        }`}
+                        onClick={() => setChartGranularity(g)}
+                      >
+                        {lab}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="datePair">
+                    <div className="miniField">
+                      <label htmlFor={`cf-${chartUid}`}>From</label>
+                      <input
+                        id={`cf-${chartUid}`}
+                        type="date"
+                        value={chartFrom}
+                        onChange={(e) => setChartFrom(e.target.value)}
+                      />
+                    </div>
+                    <div className="miniField">
+                      <label htmlFor={`ct-${chartUid}`}>To</label>
+                      <input
+                        id={`ct-${chartUid}`}
+                        type="date"
+                        value={chartTo}
+                        onChange={(e) => setChartTo(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="barBlock">
-                  <h4>Top services</h4>
-                  {analytics.topServices.length === 0 ? (
-                    <p className="meta" style={{ margin: 0 }}>
-                      No service data yet.
-                    </p>
-                  ) : (
-                    analytics.topServices.map(({ name, count }) => (
-                      <div key={name} className="barRow">
-                        <span title={name}>{name}</span>
-                        <div className="barBg">
-                          <div
-                            className="barFi"
-                            style={{
-                              width: `${Math.min(
-                                100,
-                                (count / maxBarService) * 100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="barCt">{count}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+              <TrendChart
+                uid={chartUid}
+                series={appointmentTrend}
+              />
+              <div className="trendFoot">
+                <span>
+                  {appointmentTrend.reduce((s, p) => s + p.count, 0)} appointments
+                  in range · Granularity: {chartGranularity}
+                </span>
+                <span>
+                  Tip: widen the date range for yearly view across multiple years.
+                </span>
               </div>
+            </div>
+
+            <div className="barBlock">
+              <h4>By status</h4>
+              {Object.entries(analytics.byStatus).length === 0 ? (
+                <p className="meta" style={{ margin: 0 }}>
+                  No status data yet.
+                </p>
+              ) : (
+                Object.entries(analytics.byStatus).map(([k, v]) => (
+                  <div key={k} className="barRow">
+                    <span title={k}>{k}</span>
+                    <div className="barBg">
+                      <div
+                        className="barFi"
+                        style={{
+                          width: `${Math.min(100, (v / maxBarStatus) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="barCt">{v}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         ) : null}
@@ -787,8 +1231,8 @@ export default function DashboardApp() {
           <div className="panel">
             <h2 className="panelHead">Team & access</h2>
             <p className="panelLead">
-              Create staff logins and assign roles. You cannot change your own role
-              from here; another super admin can update it if needed.
+              Create staff logins and assign roles. Your own role is shown as
+              read-only — only another super admin can change it from their account.
             </p>
             <form className="teamRow" onSubmit={addTeamUser}>
               <div className="teamField">
@@ -864,25 +1308,46 @@ export default function DashboardApp() {
                           </div>
                         </td>
                         <td className="td">
-                          <select
-                            className="statusSelect"
-                            title={
-                              isSelf
-                                ? "You cannot change your own role here"
-                                : undefined
-                            }
-                            value={u.role}
-                            disabled={isSelf}
-                            onChange={(e) =>
-                              changeTeamRole(u.id, e.target.value as Role)
-                            }
-                          >
-                            {ALL_ROLES.map((r) => (
-                              <option key={r} value={r}>
-                                {roleLabel(r)}
-                              </option>
-                            ))}
-                          </select>
+                          {isSelf ? (
+                            <span
+                              className="meta"
+                              title="Only another super admin can change your role"
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <strong style={{ color: "#e2e8f0" }}>
+                                {roleLabel(u.role)}
+                              </strong>
+                              <span
+                                className="rolePill"
+                                style={{
+                                  background: "rgba(100,116,139,0.2)",
+                                  color: "#94a3b8",
+                                  border: "1px solid rgba(148,163,184,0.35)",
+                                }}
+                              >
+                                Locked
+                              </span>
+                            </span>
+                          ) : (
+                            <select
+                              className="statusSelect"
+                              value={u.role}
+                              onChange={(e) =>
+                                changeTeamRole(u.id, e.target.value as Role)
+                              }
+                            >
+                              {ALL_ROLES.map((r) => (
+                                <option key={r} value={r}>
+                                  {roleLabel(r)}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </td>
                         <td className="td">
                           <div className="rowActions">
